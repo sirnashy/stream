@@ -90,119 +90,28 @@ app.use((req, res, next) => {
 });
 
 // ─────────────────────────────────────────────
-// Ad Management Dashboard Routes (SQLite Backed)
+// Ad Management Dashboard Routes (Pure JS DB Backed)
 // ─────────────────────────────────────────────
-const sqlite3 = require('sqlite3').verbose();
-const DB_PATH = path.join(__dirname, 'ads.db');
+const JsonDatabase = require('./database');
 const ADS_CONFIG_PATH = path.join(__dirname, 'ads_config.json');
 
-// Initialize database connection
-const db = new sqlite3.Database(DB_PATH, (err) => {
-    if (err) {
-        console.error('[Database] Failed to open database:', err.message);
-    } else {
-        console.log('[Database] Connected to SQLite database.');
-        initializeDatabase();
+// Default fallback configuration structure
+const DEFAULT_ADS_CONFIG = {
+    ad_slot_hero_bottom: { enabled: true, code: "" },
+    ad_slot_player_top: { enabled: true, code: "" },
+    ad_slot_player_bottom: { enabled: true, code: "" },
+    ad_slot_content_mid: { enabled: true, code: "" },
+    global_head_inject: { enabled: true, code: "" },
+    global_body_inject: { enabled: true, code: "" },
+    network_optimizations: {
+        adsterra_lazy_load: true,
+        monetag_anti_block: false,
+        adcash_bypass: false
     }
-});
+};
 
-// Helper to initialize table and seed default config if empty
-function initializeDatabase() {
-    db.serialize(() => {
-        db.run(`
-            CREATE TABLE IF NOT EXISTS ads_config (
-                key TEXT PRIMARY KEY,
-                value TEXT
-            )
-        `, (err) => {
-            if (err) {
-                console.error('[Database] Failed to create table:', err.message);
-                return;
-            }
-            
-            // Check if database is empty to seed it
-            db.get(`SELECT COUNT(*) as count FROM ads_config`, [], (err, row) => {
-                if (err) {
-                    console.error('[Database] Failed to check config count:', err.message);
-                    return;
-                }
-                
-                if (row.count === 0) {
-                    console.log('[Database] Table is empty. Seeding from file or defaults...');
-                    const initialConfig = getAdsConfigFromFile();
-                    db.serialize(() => {
-                        const stmt = db.prepare(`INSERT OR REPLACE INTO ads_config (key, value) VALUES (?, ?)`);
-                        Object.entries(initialConfig).forEach(([k, v]) => {
-                            stmt.run(k, JSON.stringify(v));
-                        });
-                        stmt.finalize((err) => {
-                            if (err) {
-                                console.error('[Database] Seeding failed:', err.message);
-                            } else {
-                                console.log('[Database] Seeding completed successfully.');
-                            }
-                        });
-                    });
-                }
-            });
-        });
-    });
-}
-
-// Return the default fallbacks
-function getDefaults() {
-    return {
-        ad_slot_hero_bottom: { enabled: true, code: "" },
-        ad_slot_player_top: { enabled: true, code: "" },
-        ad_slot_player_bottom: { enabled: true, code: "" },
-        ad_slot_content_mid: { enabled: true, code: "" },
-        global_head_inject: { enabled: true, code: "" },
-        global_body_inject: { enabled: true, code: "" },
-        network_optimizations: {
-            adsterra_lazy_load: true,
-            monetag_anti_block: false,
-            adcash_bypass: false
-        }
-    };
-}
-
-// Helper to load ad configuration from file safely
-function getAdsConfigFromFile() {
-    try {
-        if (fs.existsSync(ADS_CONFIG_PATH)) {
-            const data = fs.readFileSync(ADS_CONFIG_PATH, 'utf8');
-            return JSON.parse(data);
-        }
-    } catch (e) {
-        console.error('[Ads Config File] Error reading file:', e.message);
-    }
-    return getDefaults();
-}
-
-// Retrieve configuration from database, with fallback to file
-function getAdsConfig(callback) {
-    db.all(`SELECT key, value FROM ads_config`, [], (err, rows) => {
-        if (err) {
-            return callback(err);
-        }
-        if (!rows || rows.length === 0) {
-            return callback(null, getAdsConfigFromFile());
-        }
-        
-        const config = {};
-        rows.forEach(row => {
-            try {
-                config[row.key] = JSON.parse(row.value);
-            } catch (e) {
-                console.error(`[Database] Error parsing JSON for key ${row.key}:`, e.message);
-            }
-        });
-        
-        // Merge with defaults to ensure all fields are present
-        const merged = { ...getDefaults(), ...config };
-        callback(null, merged);
-    });
-}
+// Initialize file-backed JSON database
+const db = new JsonDatabase(ADS_CONFIG_PATH, DEFAULT_ADS_CONFIG);
 
 // Serve admin page
 app.get('/admin', (req, res) => {
@@ -211,13 +120,13 @@ app.get('/admin', (req, res) => {
 
 // API: Retrieve ad configuration
 app.get('/api/ads', (req, res) => {
-    getAdsConfig((err, config) => {
-        if (err) {
-            console.error('[Database] Failed to load config, falling back to file:', err.message);
-            return res.json({ success: true, data: getAdsConfigFromFile() });
-        }
+    try {
+        const config = db.getAll();
         res.json({ success: true, data: config });
-    });
+    } catch (e) {
+        console.error('[Ads API] Failed to load configuration:', e.message);
+        res.status(500).json({ success: false, error: 'Failed to retrieve configuration' });
+    }
 });
 
 // API: Save ad configuration
@@ -233,49 +142,13 @@ app.post('/api/ads', (req, res) => {
         return res.status(400).json({ success: false, error: 'Invalid config payload' });
     }
 
-    // Save to Database and then sync file
-    db.serialize(() => {
-        db.run('BEGIN TRANSACTION');
-        let hasError = false;
-        
-        const stmt = db.prepare(`INSERT OR REPLACE INTO ads_config (key, value) VALUES (?, ?)`);
-        
-        Object.entries(config).forEach(([k, v]) => {
-            stmt.run(k, JSON.stringify(v), (err) => {
-                if (err) {
-                    console.error(`[Database] Failed to save key ${k}:`, err.message);
-                    hasError = true;
-                }
-            });
-        });
-        
-        stmt.finalize(() => {
-            if (hasError) {
-                db.run('ROLLBACK');
-                console.error('[Database] Save failed, rolled back transaction.');
-                return res.status(500).json({ success: false, error: 'Failed to write configuration to database' });
-            }
-            
-            db.run('COMMIT', (err) => {
-                if (err) {
-                    console.error('[Database] Commit failed:', err.message);
-                    return res.status(500).json({ success: false, error: 'Failed to commit database transaction' });
-                }
-                
-                console.log('[Database] Ad configuration saved successfully.');
-                
-                // Write/sync back to the JSON file
-                try {
-                    fs.writeFileSync(ADS_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf8');
-                    console.log('[Ads Config File] Synced successfully.');
-                    res.json({ success: true, message: 'Configuration saved successfully.' });
-                } catch (e) {
-                    console.error('[Ads Config File] Sync failed:', e.message);
-                    res.json({ success: true, message: 'Saved to database successfully, but file synchronization failed.' });
-                }
-            });
-        });
-    });
+    try {
+        db.saveSync(config);
+        res.json({ success: true, message: 'Configuration saved successfully.' });
+    } catch (e) {
+        console.error('[Ads API] Failed to save configuration:', e.message);
+        res.status(500).json({ success: false, error: 'Failed to write configuration to database' });
+    }
 });
 
 // ─────────────────────────────────────────────
