@@ -1,7 +1,7 @@
 {
   "ad_slot_hero_bottom": {
     "enabled": true,
-    "code": ""
+    "code": "<!-- TEST HERO AD -->"
   },
   "ad_slot_player_top": {
     "enabled": true,
