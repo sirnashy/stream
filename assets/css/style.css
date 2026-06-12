@@ -1267,6 +1267,20 @@ button, input {
     display: none !important;
 }
 
+/* Force hidden player section to stay in layout with height:0 so nested ad tags can calculate width on initialize */
+.player-section.hidden {
+    display: block !important;
+    height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    border: none !important;
+}
+
 /* Standard Keyframe Animations */
 @keyframes pulse {
     0% {
@@ -1373,15 +1387,26 @@ button, input {
 .ad-slot {
     margin: 20px auto;
     width: 100%;
-    max-width: 1400px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    max-width: 100%;
+    display: block;
+    text-align: center;
+    overflow: hidden;
+    clear: both;
+}
+
+/* Target elements injected dynamically by ad networks (AdSense, Propeller, etc.) to keep them centered */
+.ad-slot ins,
+.ad-slot iframe,
+.ad-slot div {
+    margin: 0 auto !important;
+    display: block !important;
+    max-width: 100% !important;
 }
 
 .ad-slot-widget-wrapper {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+    width: 100%;
 }
 
 .ad-slot-player-top {
@@ -1398,6 +1423,7 @@ button, input {
     background: rgba(0, 0, 0, 0.1);
 }
 
+/* Responsive ad placeholders */
 .ad-placeholder {
     width: 100%;
     max-width: 728px;
@@ -1413,6 +1439,7 @@ button, input {
     overflow: hidden;
     transition: var(--transition-smooth);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin: 0 auto;
 }
 
 .ad-placeholder:hover {
@@ -1461,18 +1488,38 @@ button, input {
     50% { opacity: 0.9; transform: scale(1.05); }
 }
 
-/* Responsive adjustment for small screens */
+/* Responsive adjustment for Mobile and Tablets */
 @media (max-width: 768px) {
+    /* Mobile Leaderboard / Banner sizing */
     .ad-placeholder {
-        height: 60px;
+        max-width: 320px;
+        height: 50px;
+    }
+    .ad-badge {
+        font-size: 0.5rem;
+        top: 3px;
+        left: 6px;
+        padding: 1px 4px;
+        letter-spacing: 0.5px;
     }
     .ad-placeholder-text {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
     .ad-placeholder-icon {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
     .ad-slot-player-top, .ad-slot-player-bottom {
         padding: 10px 15px;
+    }
+    /* Set larger mobile dimensions for widget ads if appropriate (e.g. 300x250 rectangular ads) */
+    .ad-slot-widget .ad-placeholder {
+        max-width: 300px;
+        height: 250px;
+        padding: 20px;
+    }
+    .ad-slot-widget .ad-content {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
     }
 }
