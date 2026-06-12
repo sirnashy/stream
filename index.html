@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#090a0f">
+    
+    <!-- Primary SEO Meta Tags -->
+    <title>SportSRC Live - Premium Free Sports Streaming Platform</title>
+    <meta name="title" content="SportSRC Live - Premium Free Sports Streaming Platform">
+    <meta name="description" content="Watch high-definition, live sports streams for Football, Basketball, UFC, MMA, Baseball, and more. Free match schedules, real-time updates, and multi-source streaming players.">
+    <meta name="keywords" content="sports streaming, live football, free ufc streams, live basketball stream, watch baseball live, sportsrc api, sportsrc streaming">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://api.sportsrc.org/">
+    <meta property="og:title" content="SportSRC Live - Premium Free Sports Streaming Platform">
+    <meta property="og:description" content="Watch high-definition, live sports streams for Football, Basketball, UFC, MMA, Baseball, and more. Free match schedules and real-time updates.">
+    <meta property="og:image" content="https://sportsrc.org/img/sport/proxy/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://api.sportsrc.org/">
+    <meta property="twitter:title" content="SportSRC Live - Premium Free Sports Streaming Platform">
+    <meta property="twitter:description" content="Watch high-definition, live sports streams for Football, Basketball, UFC, MMA, Baseball, and more. Free match schedules and real-time updates.">
+    <meta property="twitter:image" content="https://sportsrc.org/img/sport/proxy/logo.png">
+
+    <!-- Google Fonts & Icon Libraries -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <!-- Structured Data for Sports Events (LD+JSON) -->
+    <script type="application/ld+json" id="sports-schema"></script>
+</head>
+<body>
+
+    <!-- Sticky Navigation Bar -->
+    <header class="navbar" id="navbar">
+        <div class="navbar-container">
+            <a href="#" class="logo" id="logo-btn">
+                <i class="fa-solid fa-circle-play logo-icon"></i>Sport<span class="highlight">SRC</span>
+            </a>
+            
+            <nav class="nav-categories" id="nav-categories">
+                <!-- Dynamically populated category tabs -->
+                <div class="tabs-scroll-container" id="category-tabs">
+                    <!-- Skeletons will load here -->
+                    <span class="tab-skeleton"></span>
+                    <span class="tab-skeleton"></span>
+                    <span class="tab-skeleton"></span>
+                </div>
+            </nav>
+
+            <div class="nav-actions">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search team, league..." autocomplete="off">
+                    <button id="clear-search-btn" class="clear-btn" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <button class="icon-btn" id="toggle-favorites-btn" title="Favorites">
+                    <i class="fa-regular fa-heart"></i>
+                    <span class="badge" id="favorites-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero-section" id="hero-section">
+            <div class="hero-backdrop" id="hero-backdrop"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-container">
+                <div class="hero-badge-container">
+                    <span class="hero-status-badge live" id="hero-status-badge">
+                        <span class="pulse-dot"></span>LIVE NOW
+                    </span>
+                </div>
+                <h1 class="hero-title" id="hero-title">Loading Featured Event...</h1>
+                <p class="hero-subtitle" id="hero-subtitle">Fetching the latest match details for you.</p>
+                
+                <div class="hero-teams-preview" id="hero-teams-preview">
+                    <!-- Dynamic team badges and names -->
+                </div>
+
+                <div class="hero-meta" id="hero-meta">
+                    <span class="hero-meta-item" id="hero-time"><i class="fa-regular fa-clock"></i> --:--</span>
+                    <span class="hero-meta-item" id="hero-category"><i class="fa-solid fa-gamepad"></i> Sports</span>
+                </div>
+
+                <div class="hero-cta-group">
+                    <button class="btn btn-primary btn-lg" id="hero-watch-btn">
+                        <i class="fa-solid fa-play"></i> Watch Stream
+                    </button>
+                    <button class="btn btn-secondary btn-lg" id="hero-fav-btn">
+                        <i class="fa-regular fa-heart"></i> Add to Favs
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Player Section -->
+        <section class="player-section hidden" id="player-section">
+            <div class="section-container">
+                <div class="player-card">
+                    <div class="player-header">
+                        <div class="player-title-wrapper">
+                            <span class="player-category" id="player-category-badge">Football</span>
+                            <h2 class="player-title" id="player-stream-title">Match Stream Title</h2>
+                        </div>
+                        <div class="player-actions">
+                            <button class="icon-btn-text" id="player-fav-btn">
+                                <i class="fa-regular fa-heart"></i> Favorite
+                            </button>
+                            <button class="icon-btn-text" id="close-player-btn" title="Close Player">
+                                <i class="fa-solid fa-xmark"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Player Embed Wrapper -->
+                    <div class="player-wrapper">
+                        <!-- Spinner loader for iframe -->
+                        <div class="player-loader" id="player-loader">
+                            <div class="spinner"></div>
+                            <p>Connecting to secure stream sources...</p>
+                        </div>
+                        
+                        <!-- Error screen -->
+                        <div class="player-error hidden" id="player-error">
+                            <i class="fa-solid fa-circle-exclamation error-icon"></i>
+                            <h3>Stream Loading Failed</h3>
+                            <p id="player-error-message">This stream is currently unavailable. Please try another source.</p>
+                            <button class="btn btn-secondary" id="player-retry-btn">
+                                <i class="fa-solid fa-rotate-right"></i> Retry Connection
+                            </button>
+                        </div>
+
+                        <!-- Iframe container -->
+                        <iframe 
+                            id="stream-iframe"
+                            src="about:blank"
+                            allowfullscreen="true"
+                            scrolling="no"
+                            frameborder="0"
+                            allow="autoplay; encrypted-media; picture-in-picture">
+                        </iframe>
+                    </div>
+
+                    <!-- Source Selector Controls -->
+                    <div class="player-controls">
+                        <div class="sources-label">
+                            <i class="fa-solid fa-server"></i> SELECT STREAM SOURCE:
+                        </div>
+                        <div class="sources-grid" id="stream-sources-grid">
+                            <!-- Dynamic stream buttons will load here -->
+                        </div>
+                        <div class="stream-info-bar" id="stream-info-bar">
+                            <span class="info-item"><i class="fa-solid fa-eye"></i> <span id="stream-viewers">0</span> viewers</span>
+                            <span class="info-item"><i class="fa-solid fa-language"></i> Language: <span id="stream-lang">English</span></span>
+                            <span class="info-item" id="stream-quality-badge"><span class="badge badge-hd">HD</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Favorites Section (Appears when user has favorited items) -->
+        <section class="slider-section hidden" id="favorites-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-heart accent-text"></i> My Favorites</h2>
+                    <div class="slider-arrows">
+                        <button class="arrow-btn" id="fav-prev"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="arrow-btn" id="fav-next"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-track" id="favorites-track">
+                        <!-- Dynamic favorite cards -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recently Watched Section (Appears after user watches a stream) -->
+        <section class="slider-section hidden" id="recent-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Recently Watched</h2>
+                    <div class="slider-arrows">
+                        <button class="arrow-btn" id="recent-prev"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="arrow-btn" id="recent-next"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-track" id="recent-track">
+                        <!-- Dynamic recently watched cards -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Matches Grid Section -->
+        <section class="matches-section" id="matches-section">
+            <div class="section-container">
+                <div class="section-header-main">
+                    <div class="section-title-wrapper">
+                        <h2 class="section-title-large" id="category-title">Football Matches</h2>
+                        <span class="matches-count" id="matches-count-badge">0 matches</span>
+                    </div>
+                    
+                    <!-- Search indicators / filter toggles -->
+                    <div class="filter-indicators" id="filter-indicators" style="display: none;">
+                        <span>Filtering for: "<strong id="search-query-display">Query</strong>"</span>
+                        <button class="clear-filter-btn" id="clear-filter-btn">Clear Search</button>
+                    </div>
+                </div>
+
+                <!-- Matches Grid -->
+                <div class="matches-grid" id="matches-grid">
+                    <!-- Skeletons populated by default -->
+                    <div class="card-skeleton">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="card-skeleton">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="card-skeleton">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="card-skeleton">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State & Error Display -->
+                <div class="empty-state hidden" id="empty-state">
+                    <div class="empty-state-content">
+                        <i class="fa-solid fa-circle-question empty-icon" id="empty-icon"></i>
+                        <h3 id="empty-title">No Matches Scheduled</h3>
+                        <p id="empty-text">There are currently no live or upcoming matches in this category. Check back later!</p>
+                        <button class="btn btn-secondary hidden" id="empty-retry-btn">
+                            <i class="fa-solid fa-rotate-right"></i> Reload Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo"><i class="fa-solid fa-circle-play"></i>Sport<span class="highlight">SRC</span></div>
+                <p>The ultimate hub for live sports schedules and free multi-source streaming embeddings.</p>
+            </div>
+            
+            <div class="footer-links">
+                <div class="link-column">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="#" class="footer-cat-link" data-cat="football">Football</a></li>
+                        <li><a href="#" class="footer-cat-link" data-cat="basketball">Basketball</a></li>
+                        <li><a href="#" class="footer-cat-link" data-cat="fight">MMA & UFC</a></li>
+                        <li><a href="#" class="footer-cat-link" data-cat="baseball">Baseball</a></li>
+                    </ul>
+                </div>
+                <div class="link-column">
+                    <h4>Legals & Info</h4>
+                    <p class="disclaimer-text">
+                        <strong>Disclaimer:</strong> SportSRC Live is a search engine and aggregator for embeddable streams provided by external third-party servers. All streams are hosted externally. We do not host or upload any media content, and we are not responsible for streaming quality or legality.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SportSRC Live. All rights reserved. Powered by SportSRC API V2.</p>
+        </div>
+    </footer>
+
+    <!-- Runtime environment adapter -->
+    <script src="assets/js/env.js"></script>
+    <!-- Main JavaScript App -->
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

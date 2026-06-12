@@ -1,0 +1,23 @@
+{
+  "name": "sportsrc-streaming-app",
+  "version": "1.0.0",
+  "description": "SportSRC Premium Live Sports Streaming SPA with Node/Express Proxy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^8.6.0",
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "sportsrc",
+    "sports",
+    "streaming",
+    "proxy",
+    "cors"
+  ],
+  "author": "Antigravity",
+  "license": "ISC"
+}
