@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportSRC - Ads Administration Dashboard</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-primary: #090a0f;
+            --bg-secondary: #11131c;
+            --bg-tertiary: #181b28;
+            --accent-red: #ff2a54;
+            --accent-red-hover: #ff073a;
+            --accent-blue: #00f2fe;
+            --text-main: #ffffff;
+            --text-secondary: #8b9bb4;
+            --text-muted: #505f77;
+            --border-color: rgba(255, 255, 255, 0.08);
+            
+            --glass-bg: rgba(17, 19, 28, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --glass-shadow: rgba(0, 0, 0, 0.4);
+            
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* Login Screen */
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transition: var(--transition-smooth);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .logo i {
+            color: var(--accent-red);
+        }
+
+        .logo span {
+            color: var(--accent-red);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            color: var(--text-muted);
+        }
+
+        input[type="password"], textarea, select {
+            width: 100%;
+            padding: 12px 15px 12px 42px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+            font-family: inherit;
+        }
+
+        input[type="password"]:focus, textarea:focus, select:focus {
+            border-color: var(--accent-red);
+            background: rgba(255, 255, 255, 0.06);
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 42, 84, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--accent-red-hover);
+            box-shadow: 0 0 15px rgba(255, 42, 84, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Error message */
+        .error-msg {
+            color: var(--accent-red);
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Dashboard Screen */
+        .dashboard-container {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+            margin: 40px 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-header {
+            padding: 25px 30px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 42, 84, 0.1);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .dashboard-body {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 600px;
+        }
+
+        /* Sidebar Tabs */
+        .sidebar {
+            background: rgba(0, 0, 0, 0.15);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tab-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: left;
+            transition: var(--transition-smooth);
+        }
+
+        .tab-link:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        .tab-link.active {
+            background: rgba(255, 42, 84, 0.1);
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 30px 40px;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInTab 0.3s ease;
+        }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Slot Cards */
+        .slot-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .slot-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .slot-title span {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Custom Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--text-muted);
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-red);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--accent-red);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .code-textarea {
+            width: 100%;
+            height: 120px;
+            background: #06070b;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #a5b4fc;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+        }
+
+        .code-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Info card */
+        .info-box {
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.15);
+            border-radius: 8px;
+            padding: 15px;
+            color: var(--accent-blue);
+            font-size: 0.85rem;
+            margin-top: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box i {
+            margin-top: 2px;
+        }
+
+        /* Optimization tab styles */
+        .optimisation-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: 15px;
+        }
+
+        .optimisation-info {
+            max-width: 80%;
+        }
+
+        .optimisation-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .optimisation-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Guide / Reference Cards */
+        .guide-card {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-red);
+            border-radius: 4px var(--radius-md) var(--radius-md) 4px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .guide-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guide-card ul {
+            list-style-type: none;
+            margin-left: 5px;
+            margin-top: 10px;
+        }
+
+        .guide-card li {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .guide-card li i {
+            color: var(--accent-blue);
+            margin-top: 4px;
+            font-size: 0.75rem;
+        }
+
+        .guide-code {
+            background: #06070b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #f43f5e;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Save section */
+        .save-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .save-btn {
+            max-width: 200px;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-blue);
+            border-left: 5px solid var(--accent-blue);
+            padding: 15px 25px;
+            border-radius: 6px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: #10b981;
+            border-left-color: #10b981;
+        }
+
+        .toast i {
+            font-size: 1.2rem;
+        }
+
+        .toast.success i {
+            color: #10b981;
+        }
+
+        /* Loading indicator overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(9, 10, 15, 0.7);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            border-radius: var(--radius-lg);
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-smooth);
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 42, 84, 0.1);
+            border-left-color: var(--accent-red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Container -->
+    <div class="login-container" id="login-screen">
+        <div class="logo">
+            <i class="fa-solid fa-circle-play"></i>Sport<span>SRC</span> Admin
+        </div>
+        <h2>Sign In</h2>
+        <p class="subtitle">Enter password to manage advertising placements</p>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label for="password">Admin Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+            </div>
+            <button type="submit" class="btn">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+            <div class="error-msg" id="login-error">Invalid admin password. Try again.</div>
+        </form>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container" id="dashboard-screen">
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <p id="loading-text">Saving configurations...</p>
+        </div>
+
+        <div class="dashboard-header">
+            <div class="header-title">
+                <div class="logo" style="margin-bottom: 0;">
+                    <i class="fa-solid fa-circle-play"></i>Sport<span>SRC</span>
+                </div>
+                <div style="width: 1px; height: 25px; background: var(--border-color);"></div>
+                <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-secondary);">Ads Manager</div>
+            </div>
+            <button class="logout-btn" id="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</button>
+        </div>
+        
+        <div class="dashboard-body">
+            <!-- Sidebar Navigation -->
+            <div class="sidebar">
+                <button class="tab-link active" onclick="switchTab('tab-slots')">
+                    <i class="fa-solid fa-table-cells-large"></i> Ad Placements
+                </button>
+                <button class="tab-link" onclick="switchTab('tab-global')">
+                    <i class="fa-solid fa-code"></i> Global Scripts
+                </button>
+                <button class="tab-link" onclick="switchTab('tab-optimize')">
+                    <i class="fa-solid fa-gauge-high"></i> Network Optimise
+                </button>
+                <button class="tab-link" onclick="switchTab('tab-guides')">
+                    <i class="fa-solid fa-circle-info"></i> Network Guides
+                </button>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <form id="ads-config-form">
+                    
+                    <!-- TAB: Ad Placements -->
+                    <div class="tab-content active" id="tab-slots">
+                        <p class="section-desc">Manage standard banner display placements. Empty slots will automatically display the default theme placeholders.</p>
+                        
+                        <!-- Slot: Above Player -->
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-title">
+                                    <i class="fa-solid fa-arrow-up-long"></i> Top of Video Player <span>728x90 / 320x50</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="ad_slot_player_top_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <textarea class="code-textarea" id="ad_slot_player_top_code" placeholder="Paste Adsterra / Monetag / Adcash banner tag here..."></textarea>
+                            <div class="info-box">
+                                <i class="fa-solid fa-mobile-screen"></i>
+                                <div><strong>Responsive Sizing:</strong> This slot automatically serves a standard 728x90 Leaderboard on Desktop and resizes to a 320x50 Banner on Mobile/Tablet screens. Ensure your ad network scripts are set to 'Responsive' or allow 728x90/320x50 sizes.</div>
+                            </div>
+                        </div>
+
+                        <!-- Slot: Below Player -->
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-title">
+                                    <i class="fa-solid fa-arrow-down-long"></i> Bottom of Video Player <span>728x90 / 320x50</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="ad_slot_player_bottom_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <textarea class="code-textarea" id="ad_slot_player_bottom_code" placeholder="Paste Adsterra / Monetag / Adcash banner tag here..."></textarea>
+                            <div class="info-box">
+                                <i class="fa-solid fa-mobile-screen"></i>
+                                <div><strong>Responsive Sizing:</strong> Automatically centers and sizes inside an isolated sandbox iframe. Fits 728x90 (Desktop) and 320x50 (Mobile).</div>
+                            </div>
+                        </div>
+
+                        <!-- Slot: Below Hero Section -->
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-title">
+                                    <i class="fa-solid fa-window-maximize"></i> Below Hero Banner <span>728x90 / 320x50</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="ad_slot_hero_bottom_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <textarea class="code-textarea" id="ad_slot_hero_bottom_code" placeholder="Paste banner tag here..."></textarea>
+                        </div>
+
+                        <!-- Slot: Between Widgets -->
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-title">
+                                    <i class="fa-solid fa-grip-lines"></i> Between Carousels & Grid <span>728x90 / 300x250</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="ad_slot_content_mid_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <textarea class="code-textarea" id="ad_slot_content_mid_code" placeholder="Paste banner tag here..."></textarea>
+                            <div class="info-box" style="color:#10b981; background:rgba(16,185,129,0.05); border-color:rgba(16,185,129,0.15)">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <div><strong>High Yield Mobile Slot:</strong> On mobile screens, this slot scales to a <strong>300x250 Medium Rectangle</strong> instead of a 320x50 banner. This is optimized to maximize ad network CPM and earnings.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TAB: Global Script Injections -->
+                    <div class="tab-content" id="tab-global">
+                        <p class="section-desc">Inject scripts globally. Used for Popunders, Autotags, Smart Tags, Anti-Adblock codes, or Social Push Notification bars.</p>
+                        
+                        <!-- Header Inject -->
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-title">
+                                    <i class="fa-solid fa-heading"></i> Global Head Injection (<code class="guide-code">&lt;head&gt;</code>)
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="global_head_inject_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <textarea class="code-textarea" style="height: 180px;" id="global_head_inject_code" placeholder="Paste head scripts here (e.g. Monetag Smart Tag, Google Analytics)..."></textarea>
+                            <div class="info-box">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <div><strong>Important:</strong> Scripts placed here load at the top of the index page. Ideal for main ad network scripts that must register before rendering the body.</div>
+                            </div>
+                        </div>
+
+                        <!-- Body Inject -->
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-title">
+                                    <i class="fa-solid fa-cubes"></i> Global Body Injection (<code class="guide-code">&lt;body&gt;</code>)
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="global_body_inject_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <textarea class="code-textarea" style="height: 180px;" id="global_body_inject_code" placeholder="Paste body scripts here (e.g. Adsterra Popunder, Adcash Autotag, In-Page Social Push)..."></textarea>
+                            <div class="info-box">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <div><strong>Tip:</strong> These scripts execute at the very bottom of the document body. Recommended for popunder triggers, floating banners, and analytics tracking pixels.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TAB: Network Optimizations -->
+                    <div class="tab-content" id="tab-optimize">
+                        <p class="section-desc">Enable optimized rendering configurations tailored for specific display network behavior.</p>
+                        
+                        <div class="optimisation-row">
+                            <div class="optimisation-info">
+                                <div class="optimisation-title">Adsterra Lazy Loading</div>
+                                <div class="optimisation-desc">Defer loading of player/widget banners until the elements scroll into view. Reduces page weight and improves initial loading scores.</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="opt_adsterra_lazy_load">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="optimisation-row">
+                            <div class="optimisation-info">
+                                <div class="optimisation-title">Monetag Anti-Adblock Fallback</div>
+                                <div class="optimisation-desc">Detect active browser adblockers and route request attempts through alternative CDN channels (compatible with Monetag anti-adblock solutions).</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="opt_monetag_anti_block">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="optimisation-row">
+                            <div class="optimisation-info">
+                                <div class="optimisation-title">Adcash Auto-Sandboxing Bypass</div>
+                                <div class="optimisation-desc">Wraps injected script tags in security try-catch blocks to bypass browser sandbox restrictions inside dynamic SPAs, ensuring proper rendering.</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="opt_adcash_bypass">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Network Integration Guides -->
+                    <div class="tab-content" id="tab-guides">
+                        <p class="section-desc">Quick reference manuals for setting up the most popular high-CPM networks on your live streaming site.</p>
+                        
+                        <!-- Monetag Guide -->
+                        <div class="guide-card">
+                            <h3><i class="fa-solid fa-money-bill-wave" style="color: #00f2fe;"></i> Monetag Settings</h3>
+                            <ul>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Smart Tag**: Paste your main Monetag Smart Tag code directly into the **Global Head Injection** area. Enable the switch.</li>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Native Banners**: Generate banner widgets (728x90 / 300x250) in your Monetag panel, then paste the script markup in **Ad Placements**.</li>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Vignette / On-Click Ads**: Best placed in the **Global Body Injection** tab.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Adsterra Guide -->
+                        <div class="guide-card">
+                            <h3><i class="fa-solid fa-star" style="color: #ff2a54;"></i> Adsterra Settings</h3>
+                            <ul>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Display Banners**: Get the code for 728x90 and 320x50 sizes. Paste them inside the **Top / Bottom Player** slots.</li>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Dynamic Iframe Sandbox**: Adsterra codes containing `document.write` are safely captured inside our custom dynamic sandbox iframe, preventing page crashes.</li>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Popunder Ads**: Place your Adsterra Popunder script (e.g. `invoke.js` source) in the **Global Body Injection** to trigger popups site-wide.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Adcash Guide -->
+                        <div class="guide-card">
+                            <h3><i class="fa-solid fa-bullseye" style="color: #10b981;"></i> Adcash Settings</h3>
+                            <ul>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Autotag Integration**: Grab your site Autotag code and paste it in **Global Head Injection**. It automatically manages push, overlays, and interstitial ads.</li>
+                                <li><i class="fa-solid fa-chevron-right"></i> **Display Ads**: Paste specific Adcash banner zone scripts in the matching slots.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Save changes section -->
+                    <div class="save-footer">
+                        <button type="submit" class="btn save-btn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toast-text">Settings updated successfully!</span>
+    </div>
+
+    <script>
+        // Check session login state on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedPassword = sessionStorage.getItem('admin_pass');
+            if (savedPassword) {
+                // Try logging in with saved credentials
+                attemptLogin(savedPassword);
+            }
+        });
+
+        // Login form submit
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('password').value;
+            attemptLogin(pass);
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            sessionStorage.removeItem('admin_pass');
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.body.style.alignItems = 'center';
+            document.body.style.justifyContent = 'center';
+        });
+
+        // Switch Tabs
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            const activeLink = Array.from(document.querySelectorAll('.tab-link')).find(btn => btn.getAttribute('onclick').includes(tabId));
+            if (activeLink) activeLink.classList.add('active');
+            
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Attempt authentication
+        async function attemptLogin(password) {
+            const errorEl = document.getElementById('login-error');
+            errorEl.style.display = 'none';
+            
+            try {
+                // Request current config as authentication check
+                const res = await fetch('/api/ads');
+                if (!res.ok) throw new Error('API unreachable');
+                const json = await res.json();
+                
+                if (json.success) {
+                    // Test password validity by posting to config (without mutating config)
+                    const authRes = await fetch('/api/ads', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password, config: json.data })
+                    });
+                    
+                    if (authRes.ok) {
+                        sessionStorage.setItem('admin_pass', password);
+                        showDashboard(json.data);
+                    } else {
+                        throw new Error('Invalid credentials');
+                    }
+                }
+            } catch (e) {
+                errorEl.style.display = 'block';
+                sessionStorage.removeItem('admin_pass');
+            }
+        }
+
+        // Show main dashboard and populate inputs
+        function showDashboard(config) {
+            document.getElementById('login-screen').style.display = 'none';
+            
+            // Adjust body positioning for dashboard
+            document.body.style.alignItems = 'flex-start';
+            document.body.style.justifyContent = 'center';
+            document.getElementById('dashboard-screen').style.display = 'block';
+            
+            // Populate form fields
+            const keys = [
+                'ad_slot_hero_bottom',
+                'ad_slot_player_top',
+                'ad_slot_player_bottom',
+                'ad_slot_content_mid',
+                'global_head_inject',
+                'global_body_inject'
+            ];
+            
+            keys.forEach(key => {
+                const item = config[key] || { enabled: true, code: '' };
+                document.getElementById(`${key}_enabled`).checked = item.enabled;
+                document.getElementById(`${key}_code`).value = item.code || '';
+            });
+            
+            // Optimizations
+            const opts = config.network_optimizations || { adsterra_lazy_load: true, monetag_anti_block: false, adcash_bypass: false };
+            document.getElementById('opt_adsterra_lazy_load').checked = opts.adsterra_lazy_load ?? true;
+            document.getElementById('opt_monetag_anti_block').checked = opts.monetag_anti_block ?? false;
+            document.getElementById('opt_adcash_bypass').checked = opts.adcash_bypass ?? false;
+        }
+
+        // Save Settings
+        document.getElementById('ads-config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.add('active');
+            
+            const password = sessionStorage.getItem('admin_pass');
+            
+            // Construct config object
+            const config = {
+                ad_slot_hero_bottom: {
+                    enabled: document.getElementById('ad_slot_hero_bottom_enabled').checked,
+                    code: document.getElementById('ad_slot_hero_bottom_code').value
+                },
+                ad_slot_player_top: {
+                    enabled: document.getElementById('ad_slot_player_top_enabled').checked,
+                    code: document.getElementById('ad_slot_player_top_code').value
+                },
+                ad_slot_player_bottom: {
+                    enabled: document.getElementById('ad_slot_player_bottom_enabled').checked,
+                    code: document.getElementById('ad_slot_player_bottom_code').value
+                },
+                ad_slot_content_mid: {
+                    enabled: document.getElementById('ad_slot_content_mid_enabled').checked,
+                    code: document.getElementById('ad_slot_content_mid_code').value
+                },
+                global_head_inject: {
+                    enabled: document.getElementById('global_head_inject_enabled').checked,
+                    code: document.getElementById('global_head_inject_code').value
+                },
+                global_body_inject: {
+                    enabled: document.getElementById('global_body_inject_enabled').checked,
+                    code: document.getElementById('global_body_inject_code').value
+                },
+                network_optimizations: {
+                    adsterra_lazy_load: document.getElementById('opt_adsterra_lazy_load').checked,
+                    monetag_anti_block: document.getElementById('opt_monetag_anti_block').checked,
+                    adcash_bypass: document.getElementById('opt_adcash_bypass').checked
+                }
+            };
+            
+            try {
+                const res = await fetch('/api/ads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password, config })
+                });
+                
+                const json = await res.json();
+                overlay.classList.remove('active');
+                
+                if (res.ok && json.success) {
+                    showToast('Settings saved successfully!', 'success');
+                } else {
+                    showToast(json.error || 'Failed to save settings.', 'error');
+                }
+            } catch (err) {
+                overlay.classList.remove('active');
+                showToast('Network error, failed to reach server.', 'error');
+            }
+        });
+
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            
+            toastText.textContent = message;
+            toast.className = `toast ${type === 'success' ? 'success' : ''} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

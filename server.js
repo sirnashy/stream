@@ -9,8 +9,10 @@ const express = require('express');
 const https = require('https');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
+app.use(express.json()); // Support JSON-encoded request bodies
 const PORT = process.env.PORT || process.env.NODE_PORT || 3000;
 
 // ─────────────────────────────────────────────
@@ -85,6 +87,70 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
+});
+
+// ─────────────────────────────────────────────
+// Ad Management Dashboard Routes
+// ─────────────────────────────────────────────
+const ADS_CONFIG_PATH = path.join(__dirname, 'ads_config.json');
+
+// Helper to load ad configuration safely
+function getAdsConfig() {
+    try {
+        if (fs.existsSync(ADS_CONFIG_PATH)) {
+            const data = fs.readFileSync(ADS_CONFIG_PATH, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('[Ads Config] Error reading file, using default values:', e.message);
+    }
+    // Default fallback structure
+    return {
+        ad_slot_hero_bottom: { enabled: true, code: "" },
+        ad_slot_player_top: { enabled: true, code: "" },
+        ad_slot_player_bottom: { enabled: true, code: "" },
+        ad_slot_content_mid: { enabled: true, code: "" },
+        global_head_inject: { enabled: true, code: "" },
+        global_body_inject: { enabled: true, code: "" },
+        network_optimizations: {
+            adsterra_lazy_load: true,
+            monetag_anti_block: false,
+            adcash_bypass: false
+        }
+    };
+}
+
+// Serve admin page
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// API: Retrieve ad configuration
+app.get('/api/ads', (req, res) => {
+    res.json({ success: true, data: getAdsConfig() });
+});
+
+// API: Save ad configuration
+app.post('/api/ads', (req, res) => {
+    const { password, config } = req.body;
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (password !== adminPassword) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: Invalid password' });
+    }
+
+    if (!config || typeof config !== 'object') {
+        return res.status(400).json({ success: false, error: 'Invalid config payload' });
+    }
+
+    try {
+        fs.writeFileSync(ADS_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf8');
+        console.log('[Ads Config] Saved successfully.');
+        res.json({ success: true, message: 'Configuration saved successfully.' });
+    } catch (e) {
+        console.error('[Ads Config] Error saving file:', e.message);
+        res.status(500).json({ success: false, error: 'Failed to write configuration file' });
+    }
 });
 
 // ─────────────────────────────────────────────

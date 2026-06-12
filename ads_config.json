@@ -1,0 +1,31 @@
+{
+  "ad_slot_hero_bottom": {
+    "enabled": true,
+    "code": ""
+  },
+  "ad_slot_player_top": {
+    "enabled": true,
+    "code": ""
+  },
+  "ad_slot_player_bottom": {
+    "enabled": true,
+    "code": ""
+  },
+  "ad_slot_content_mid": {
+    "enabled": true,
+    "code": ""
+  },
+  "global_head_inject": {
+    "enabled": true,
+    "code": ""
+  },
+  "global_body_inject": {
+    "enabled": true,
+    "code": ""
+  },
+  "network_optimizations": {
+    "adsterra_lazy_load": true,
+    "monetag_anti_block": false,
+    "adcash_bypass": false
+  }
+}

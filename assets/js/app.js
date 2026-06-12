@@ -556,6 +556,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialCategory = AppState.categories.find(c => c.id === 'football') || AppState.categories[0];
         switchCategory(initialCategory ? initialCategory.id : 'football');
     });
+    // Pre-load ad config so global head/body scripts inject ASAP,
+    // then run the full slot injection once the page has settled.
+    loadAdsConfig().then(() => refreshDynamicAds());
 });
 
 function loadLocalStorageData() {
@@ -1010,6 +1013,7 @@ async function loadMatchStream(match) {
     if (!playerSection) return;
 
     playerSection.classList.remove('hidden');
+    refreshDynamicAds();
     playerLoader.classList.remove('hidden');
     playerError.classList.add('hidden');
     iframe.src = 'about:blank';
@@ -1454,3 +1458,250 @@ function generateEventSchema(detail) {
     };
     el.textContent = JSON.stringify(schema, null, 2);
 }
+
+// ─────────────────────────────────────────────
+// Ad Management System
+// ─────────────────────────────────────────────
+
+/**
+ * Map of slot key (from ads_config.json) → DOM element ID in index.html
+ */
+const AD_SLOT_MAP = {
+    ad_slot_hero_bottom:   'ad-slot-hero-bottom',
+    ad_slot_player_top:    'ad-slot-player-top',
+    ad_slot_player_bottom: 'ad-slot-player-bottom',
+    ad_slot_content_mid:   'ad-slot-content-mid',
+};
+
+/** Cached config fetched from /api/ads */
+let _adsConfig = null;
+
+/**
+ * Load ad configuration from the server (or use in-memory cache).
+ * Falls back gracefully if the API is unavailable.
+ */
+async function loadAdsConfig() {
+    try {
+        const res = await fetch('/api/ads', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+            _adsConfig = json.data;
+        }
+    } catch (e) {
+        console.warn('[Ads] Could not fetch /api/ads — ads disabled for this session:', e.message);
+        _adsConfig = null;
+    }
+    return _adsConfig;
+}
+
+/**
+ * Safely execute an ad code string inside a target container element.
+ * Handles:
+ *   - Raw <script> tags (Adsterra, Adcash, Monetag inline codes)
+ *   - <ins> tags (Google AdSense)
+ *   - Plain HTML (banners, image ads)
+ *   - document.write shim (some older networks use this)
+ * @param {HTMLElement} container  - The slot element to inject into
+ * @param {string}      rawCode    - The raw ad HTML/JS string from admin
+ */
+function injectAdCode(container, rawCode) {
+    if (!container || !rawCode || !rawCode.trim()) return;
+
+    // Clear the existing placeholder content
+    container.innerHTML = '';
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = rawCode.trim();
+
+    // Collect script elements before we flatten the DOM
+    const scripts = Array.from(tmp.querySelectorAll('script'));
+    const nonScriptHtml = rawCode.replace(/<script[\s\S]*?<\/script>/gi, '').trim();
+
+    // Inject non-script HTML first (ins tags, divs, iframes, etc.)
+    if (nonScriptHtml) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ad-injected-content';
+        wrapper.innerHTML = nonScriptHtml;
+        container.appendChild(wrapper);
+    }
+
+    // Now re-create and append each script to actually run it
+    scripts.forEach(originalScript => {
+        const script = document.createElement('script');
+
+        // Copy all attributes (type, async, data-*, etc.)
+        Array.from(originalScript.attributes).forEach(attr => {
+            script.setAttribute(attr.name, attr.value);
+        });
+
+        if (originalScript.src) {
+            // External script (e.g. Adsterra //www.effectivegatetocontent.com/...)
+            script.src = originalScript.src;
+            script.async = true;
+            script.onerror = () => console.warn('[Ads] External script failed to load:', script.src);
+        } else {
+            // Inline script — shim document.write to avoid page wipe
+            const code = originalScript.textContent || originalScript.innerText || '';
+            const shimmedCode = code.replace(/document\.write\s*\(/g, '__adDocWrite(container,');
+            script.textContent = `
+                (function(container) {
+                    function __adDocWrite(c, html) {
+                        var d = document.createElement('div');
+                        d.innerHTML = html;
+                        (c || document.currentScript.parentElement).appendChild(d);
+                    }
+                    ${shimmedCode}
+                })(document.getElementById(${JSON.stringify(container.id)}));
+            `;
+        }
+
+        container.appendChild(script);
+    });
+
+    // Trigger Google AdSense push if <ins> tags were injected
+    const insEls = container.querySelectorAll('.adsbygoogle:not([data-ad-status])');
+    if (insEls.length) {
+        insEls.forEach(() => {
+            try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (_) {}
+        });
+    }
+}
+
+/**
+ * Inject a global script into the document <head> or <body>.
+ * Avoids duplicate injection by checking a data attribute marker.
+ * @param {'head'|'body'} target
+ * @param {string}        rawCode
+ * @param {string}        markerKey  - Unique marker to prevent re-injection
+ */
+function injectGlobalScript(target, rawCode, markerKey) {
+    if (!rawCode || !rawCode.trim()) return;
+    // Prevent double injection across navigation/refresh calls
+    if (document.querySelector(`[data-ad-injected="${markerKey}"]`)) return;
+
+    const container = target === 'head' ? document.head : document.body;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = rawCode.trim();
+
+    const scripts = Array.from(tmp.querySelectorAll('script'));
+
+    scripts.forEach(originalScript => {
+        const script = document.createElement('script');
+        Array.from(originalScript.attributes).forEach(attr => {
+            script.setAttribute(attr.name, attr.value);
+        });
+        if (originalScript.src) {
+            script.src = originalScript.src;
+            script.async = true;
+        } else {
+            script.textContent = originalScript.textContent;
+        }
+        script.dataset.adInjected = markerKey;
+        container.appendChild(script);
+    });
+
+    // Inject any non-script HTML (e.g. noscript tags) into body
+    const nonScriptHtml = rawCode.replace(/<script[\s\S]*?<\/script>/gi, '').trim();
+    if (nonScriptHtml && target === 'body') {
+        const div = document.createElement('div');
+        div.dataset.adInjected = markerKey;
+        div.innerHTML = nonScriptHtml;
+        document.body.appendChild(div);
+    }
+}
+
+/**
+ * Apply network-specific optimisations based on the stored flags.
+ * @param {object} opts - network_optimizations from ads_config.json
+ */
+function applyNetworkOptimizations(opts) {
+    if (!opts) return;
+
+    // Adsterra lazy-load: observe slots and load ads only when near viewport
+    if (opts.adsterra_lazy_load) {
+        const slots = document.querySelectorAll('.ad-slot');
+        if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        window.dispatchEvent(new Event('resize'));
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '200px' });
+            slots.forEach(s => io.observe(s));
+        }
+    }
+
+    // Monetag anti-adblock: ensure their script re-initialises
+    if (opts.monetag_anti_block && window.__monetag) {
+        try { window.__monetag.recheck && window.__monetag.recheck(); } catch (_) {}
+    }
+
+    // Adcash: dispatch a custom event some Adcash autotag scripts listen for
+    if (opts.adcash_bypass) {
+        try { window.dispatchEvent(new CustomEvent('adcash:init')); } catch (_) {}
+    }
+}
+
+/**
+ * Main ad refresh entry point.
+ * Fetches config (if not cached), injects ads into every configured slot,
+ * injects global scripts, and applies network optimizations.
+ * Safe to call multiple times (config cached, global scripts guarded by markers).
+ */
+async function refreshDynamicAds() {
+    try {
+        // Use cached config or fetch fresh
+        const config = _adsConfig || await loadAdsConfig();
+        if (!config) return; // API unavailable
+
+        // ── Per-slot injection ──────────────────────────────────────
+        Object.entries(AD_SLOT_MAP).forEach(([key, elId]) => {
+            const slotEl  = document.getElementById(elId);
+            const wrapper = slotEl?.parentElement;  // the .ad-slot-widget-wrapper
+            const cfg     = config[key];
+            if (!slotEl) return;
+
+            if (!cfg || !cfg.enabled || !cfg.code?.trim()) {
+                // Disabled or no code: keep native placeholder, hide outer wrapper if desired
+                if (wrapper && wrapper.classList.contains('ad-slot-widget-wrapper')) {
+                    wrapper.style.display = (!cfg || !cfg.enabled) ? 'none' : '';
+                }
+                return;
+            }
+
+            // Show the wrapper
+            if (wrapper && wrapper.classList.contains('ad-slot-widget-wrapper')) {
+                wrapper.style.display = '';
+            }
+
+            // Only inject once per slot (guard against multiple calls)
+            if (slotEl.dataset.adLoaded === '1') return;
+            slotEl.dataset.adLoaded = '1';
+
+            injectAdCode(slotEl, cfg.code);
+        });
+
+        // ── Global <head> inject (Monetag Smart Tag, etc.) ─────────
+        if (config.global_head_inject?.enabled && config.global_head_inject?.code?.trim()) {
+            injectGlobalScript('head', config.global_head_inject.code, 'global-head');
+        }
+
+        // ── Global <body> inject (Adsterra Popunder, Adcash Autotag) ─
+        if (config.global_body_inject?.enabled && config.global_body_inject?.code?.trim()) {
+            injectGlobalScript('body', config.global_body_inject.code, 'global-body');
+        }
+
+        // ── Network-specific optimizations ─────────────────────────
+        applyNetworkOptimizations(config.network_optimizations);
+
+        // Generic resize dispatch for any remaining ad scripts
+        window.dispatchEvent(new Event('resize'));
+
+    } catch (e) {
+        console.warn('[Ads] Error during ad refresh:', e.message);
+    }
+}
+
